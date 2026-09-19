@@ -4,6 +4,6 @@ services:
     # Host networking allows SANE network discovery and direct access to LAN scanners.
     network_mode: host
     environment:
-      SANE_DEVICE: "${SANE_DEVICE:-}"
+      SANE_DEVICE: "${SANE_DEVICE:-brother4:net1;dev0}"
       SCAN_TIMEOUT: "${SCAN_TIMEOUT:-120}"
     restart: unless-stopped

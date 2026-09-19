@@ -2,7 +2,7 @@
 
 A small Flask web application for scanning documents from a Brother printer/scanner on the local network.
 
-The container includes the SANE command-line tools and the generic sane-airscan backend for network scanners. The scanner must be reachable from the container and visible to SANE.
+The container includes SANE, the generic sane-airscan backend, and Brother's brscan4 backend for the DCP-J785DW on amd64 images. The scanner must be reachable from the container and visible to SANE.
 
 ## Run with Docker
 
@@ -21,7 +21,15 @@ Check which scanner names SANE can see:
 docker run --rm --network host --entrypoint scanimage brother-scan-web -L
 ```
 
-Set SANE_DEVICE to the exact device name reported by scanimage -L. Do not set it to a raw IP address; an IP address is not a complete SANE device name. Leave it empty to let SANE use its default/discovered device.
+For the DCP-J785DW, the expected Brother SANE device is usually:
+
+```text
+brother4:net1;dev0
+```
+
+The Compose example uses that device by default. Override SANE_DEVICE if the device name differs or if you have more than one scanner. Do not set SANE_DEVICE to a raw IP address; an IP address is not a complete SANE device name.
+
+The proprietary Brother brscan4 package is amd64-only, so the DCP-J785DW backend is included in amd64 images. arm64 images retain sane-airscan for scanners supporting eSCL/WSD.
 
 ## Run with Compose
 
@@ -30,10 +38,6 @@ The example Compose file uses host networking so network scanner discovery works
 ```sh
 docker compose up --build
 ```
-
-Set SANE_DEVICE in the environment if more than one scanner is available.
-
-If the scanner does not appear in scanimage -L, the model may require Brother's proprietary brscan/brscan4 backend and configuration. The backend must be installed in the image; sane-utils alone does not provide every Brother network backend.
 
 ## Run locally
 

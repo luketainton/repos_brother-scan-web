@@ -7,8 +7,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     HOME=/tmp \
     UV_CACHE_DIR=/tmp/uv-cache
 
+ARG TARGETARCH
+
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y sane-utils sane-airscan \
+    && apt-get install --no-install-recommends -y ca-certificates curl libavahi-client3 sane-utils sane-airscan \
+    && if [ "$TARGETARCH" = "amd64" ]; then \
+         curl -fsSL https://download.brother.com/welcome/dlf105200/brscan4-0.4.11-1.amd64.deb -o /tmp/brscan4.deb \
+         && apt-get install --no-install-recommends -y /tmp/brscan4.deb \
+         && rm -f /tmp/brscan4.deb; \
+       fi \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.17 /uv /uvx /bin/
