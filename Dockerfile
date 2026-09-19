@@ -29,4 +29,4 @@ RUN mkdir -p /tmp/uv-cache && chmod 777 /tmp/uv-cache
 
 EXPOSE 8080
 USER 65532:65532
-CMD ["/app/.venv/bin/gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+CMD ["/app/.venv/bin/gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "0", "app:app"]
