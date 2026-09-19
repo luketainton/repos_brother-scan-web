@@ -1,8 +1,8 @@
 services:
   brother-scan-web:
     build: .
-    ports:
-      - "8080:8080"
+    # Host networking allows SANE network discovery and direct access to LAN scanners.
+    network_mode: host
     environment:
       SANE_DEVICE: "${SANE_DEVICE:-}"
       SCAN_TIMEOUT: "${SCAN_TIMEOUT:-120}"

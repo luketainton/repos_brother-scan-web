@@ -5,26 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Brother Scan</title>
     <style>
-      body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 3rem auto; padding: 0 1rem; }
-      form { display: grid; gap: 1rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: .75rem; }
-      label { display: grid; gap: .35rem; }
-      button { padding: .7rem 1rem; cursor: pointer; }
+      :root { color-scheme: light; --ink: #172033; --muted: #667085; --surface: rgba(255,255,255,.92); --line: #dfe5ee; --accent: #2855d9; --accent-dark: #1d3fa8; }
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; padding: 2rem 1rem; color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: radial-gradient(circle at top left, #dbe7ff 0, transparent 42%), linear-gradient(135deg, #f7f9fc, #edf2f8); }
+      main { width: min(100%, 42rem); margin: 0 auto; }
+      .brand { display: flex; align-items: center; gap: .8rem; margin: 1rem 0 2rem; }
+      .brand-mark { display: grid; width: 3rem; height: 3rem; place-items: center; color: white; font-size: 1.35rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), #6b7df5); border-radius: .9rem; box-shadow: 0 .75rem 1.5rem rgba(40,85,217,.22); }
+      h1 { margin: 0; font-size: clamp(1.8rem, 5vw, 2.35rem); letter-spacing: -.04em; }
+      .eyebrow { margin: 0 0 .2rem; color: var(--accent); font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+      .intro { margin: 0 0 1.4rem; color: var(--muted); line-height: 1.6; }
+      form { display: grid; gap: 1.25rem; padding: clamp(1.25rem,5vw,2rem); background: var(--surface); border: 1px solid rgba(255,255,255,.75); border-radius: 1.25rem; box-shadow: 0 1.5rem 4rem rgba(35,53,86,.12); backdrop-filter: blur(12px); }
+      .form-grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      label { display: grid; gap: .45rem; color: var(--ink); font-size: .9rem; font-weight: 700; }
+      label.full { grid-column: 1 / -1; }
+      select { width: 100%; padding: .78rem .85rem; color: var(--ink); font: inherit; background: #fff; border: 1px solid var(--line); border-radius: .7rem; outline: none; transition: border-color .2s, box-shadow .2s; }
+      select:focus { border-color: var(--accent); box-shadow: 0 0 0 .2rem rgba(40,85,217,.13); }
+      button { width: 100%; padding: .9rem 1rem; color: #fff; font: inherit; font-weight: 800; cursor: pointer; background: linear-gradient(135deg, var(--accent), #536ff0); border: 0; border-radius: .7rem; box-shadow: 0 .7rem 1.2rem rgba(40,85,217,.2); transition: transform .2s, box-shadow .2s, background .2s; }
+      button:hover { background: linear-gradient(135deg, var(--accent-dark), var(--accent)); box-shadow: 0 1rem 1.5rem rgba(40,85,217,.27); transform: translateY(-1px); }
+      button:active { transform: translateY(0); }
+      .hint { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.5; }
+      @media (max-width: 30rem) { .form-grid { grid-template-columns: 1fr; } label.full { grid-column: auto; } }
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
     </style>
   </head>
   <body>
-    <h1>Brother Scan</h1>
-    <p>Scan a document from the configured network scanner.</p>
-    <form action="/scan" method="post">
-      <label>Format
-        <select name="format"><option value="pdf">PDF</option><option value="png">PNG</option></select>
-      </label>
-      <label>Resolution (DPI)
-        <input name="dpi" type="number" min="75" max="600" value="300">
-      </label>
-      <label>Source
-        <select name="source"><option value="flatbed">Flatbed</option><option value="adf">ADF</option></select>
-      </label>
-      <button type="submit">Scan</button>
-    </form>
+    <main>
+      <header class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div><p class="eyebrow">Network scanner</p><h1>Brother Scan</h1></div>
+      </header>
+      <p class="intro">Turn a document from your network scanner into a clean PDF or image.</p>
+      <form action="/scan" method="post">
+        <div class="form-grid">
+          <label>Format
+            <select name="format"><option value="pdf">PDF document</option><option value="png">PNG image</option></select>
+          </label>
+          <label>Resolution
+            <select name="dpi" aria-label="Resolution"><option value="150">150 DPI</option><option value="300" selected>300 DPI</option><option value="600">600 DPI</option></select>
+          </label>
+          <label class="full">Source
+            <select name="source"><option value="flatbed">Flatbed</option><option value="adf">Automatic document feeder (ADF)</option></select>
+          </label>
+        </div>
+        <p class="hint">Place your document on the scanner, choose your options, and start when ready.</p>
+        <button type="submit">Start scan <span aria-hidden="true">&amp;rarr;</span></button>
+      </form>
+    </main>
   </body>
 </html>

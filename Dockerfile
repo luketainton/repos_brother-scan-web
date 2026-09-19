@@ -8,10 +8,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_CACHE_DIR=/tmp/uv-cache
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y sane-utils \
+    && apt-get install --no-install-recommends -y sane-utils sane-airscan \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ghcr.io/astral-sh/uv:0.8.14 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.12.17 /uv /uvx /bin/
 WORKDIR /app
 COPY pyproject.toml uv.lock* README.md ./
 RUN uv sync --frozen --no-dev || uv sync --no-dev
