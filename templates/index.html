@@ -5,23 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Brother Scan</title>
   <style>
-    :root { color-scheme: light; --ink: #172033; --muted: #667085; --blue: #2855d9; }
+    :root {
+      color-scheme: light dark;
+      --ink: #172033;
+      --muted: #667085;
+      --blue: #2855d9;
+      --page-start: #dbe7ff;
+      --page-end: #edf2f8;
+      --panel: rgba(255, 255, 255, .92);
+      --panel-border: #ffffff;
+      --field: #fff;
+      --field-border: #dfe5ee;
+      --shadow: rgba(35, 53, 86, .12);
+      --button-start: #2855d9;
+      --button-end: #536ff0;
+      --button-hover-start: #1d3fa8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #edf2ff;
+        --muted: #aab7cf;
+        --blue: #86a0ff;
+        --page-start: #111827;
+        --page-end: #1b2638;
+        --panel: rgba(20, 29, 45, .94);
+        --panel-border: #2e3b53;
+        --field: #111b2b;
+        --field-border: #3a4962;
+        --shadow: rgba(0, 0, 0, .32);
+        --button-start: #4164e2;
+        --button-end: #647ff2;
+        --button-hover-start: #5978ef;
+      }
+    }
     * { box-sizing: border-box; }
-    body { min-height: 100vh; margin: 0; padding: 2rem 1rem; color: var(--ink); font-family: system-ui, sans-serif; background: radial-gradient(circle at top left, #dbe7ff, transparent 42%), linear-gradient(135deg, #f7f9fc, #edf2f8); }
+    body { min-height: 100vh; margin: 0; padding: 2rem 1rem; color: var(--ink); font-family: system-ui, sans-serif; background: radial-gradient(circle at top left, var(--page-start), transparent 42%), linear-gradient(135deg, var(--page-end), var(--page-end)); }
     main { width: min(100%, 42rem); margin: 0 auto; }
     header { display: flex; align-items: center; gap: .8rem; margin: 1rem 0 2rem; }
     .mark { display: grid; width: 3rem; height: 3rem; place-items: center; color: #fff; font-size: 1.35rem; font-weight: 800; background: linear-gradient(135deg, var(--blue), #6b7df5); border-radius: .9rem; box-shadow: 0 .75rem 1.5rem #2855d938; }
     .eyebrow { margin: 0 0 .2rem; color: var(--blue); font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
     h1 { margin: 0; font-size: clamp(1.8rem, 5vw, 2.35rem); letter-spacing: -.04em; }
     .intro { margin: 0 0 1.4rem; color: var(--muted); line-height: 1.6; }
-    form { display: grid; gap: 1.25rem; padding: clamp(1.25rem, 5vw, 2rem); background: #fffffff0; border: 1px solid #ffffffbf; border-radius: 1.25rem; box-shadow: 0 1.5rem 4rem #2335561f; }
+    form { display: grid; gap: 1.25rem; padding: clamp(1.25rem, 5vw, 2rem); background: #fffffff0; border: 1px solid #ffffffbf; border-radius: 1.25rem; box-shadow: 0 1.5rem 4rem var(--shadow); }
     .grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     label { display: grid; gap: .45rem; font-size: .9rem; font-weight: 700; }
     label.full { grid-column: 1 / -1; }
-    select { width: 100%; padding: .78rem .85rem; color: var(--ink); font: inherit; background: #fff; border: 1px solid #dfe5ee; border-radius: .7rem; outline: none; }
+    select { width: 100%; padding: .78rem .85rem; color: var(--ink); font: inherit; background: var(--field); border: 1px solid var(--field-border); border-radius: .7rem; outline: none; }
     select:focus { border-color: var(--blue); box-shadow: 0 0 0 .2rem #2855d922; }
-    button { width: 100%; padding: .9rem 1rem; color: #fff; font: inherit; font-weight: 800; cursor: pointer; background: linear-gradient(135deg, var(--blue), #536ff0); border: 0; border-radius: .7rem; box-shadow: 0 .7rem 1.2rem #2855d933; }
-    button:hover { background: linear-gradient(135deg, #1d3fa8, var(--blue)); }
+    button { width: 100%; padding: .9rem 1rem; color: #fff; font: inherit; font-weight: 800; cursor: pointer; background: linear-gradient(135deg, var(--button-start), var(--button-end)); border: 0; border-radius: .7rem; box-shadow: 0 .7rem 1.2rem var(--shadow); }
+    button:hover { background: linear-gradient(135deg, var(--button-hover-start), var(--blue)); }
+    button:disabled { cursor: wait; opacity: .82; }
+    .spinner { display: inline-block; width: .9rem; height: .9rem; margin-right: .45rem; border: 2px solid rgba(255, 255, 255, .45); border-top-color: #fff; border-radius: 50%; vertical-align: -.12rem; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .hint { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.5; }
     @media (max-width: 30rem) { .grid { grid-template-columns: 1fr; } label.full { grid-column: auto; } }
   </style>
@@ -46,8 +81,19 @@
         </label>
       </div>
       <p class="hint">Place your document on the scanner, choose your options, and start when ready.</p>
-      <button type="submit">Start scan <span aria-hidden="true">&rarr;</span></button>
+      <button type="submit"><span class="button-label">Start scan <span aria-hidden="true">&rarr;</span></span></button>
     </form>
+    <script>
+      const scanForm = document.querySelector('form');
+      const scanButton = scanForm.querySelector('button[type="submit"]');
+      const buttonLabel = scanButton.querySelector('.button-label');
+
+      scanForm.addEventListener('submit', () => {
+        scanButton.disabled = true;
+        scanButton.setAttribute('aria-busy', 'true');
+        buttonLabel.innerHTML = '<span class="spinner" aria-hidden="true"></span>Scanning...';
+      });
+    </script>
   </main>
 </body>
 </html>
