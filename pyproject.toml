@@ -1,0 +1,28 @@
+[project]
+name = "brother-scan-web"
+version = "0.1.0"
+description = "A Flask web interface for scanning with a Brother network scanner"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "flask>=3.1,<4",
+    "gunicorn>=23,<24",
+    "img2pdf>=0.6,<1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3,<10",
+    "ruff>=0.11,<1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

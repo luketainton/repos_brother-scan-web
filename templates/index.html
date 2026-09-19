@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Brother Scan</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 3rem auto; padding: 0 1rem; }
+      form { display: grid; gap: 1rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: .75rem; }
+      label { display: grid; gap: .35rem; }
+      button { padding: .7rem 1rem; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <h1>Brother Scan</h1>
+    <p>Scan a document from the configured network scanner.</p>
+    <form action="/scan" method="post">
+      <label>Format
+        <select name="format"><option value="pdf">PDF</option><option value="png">PNG</option></select>
+      </label>
+      <label>Resolution (DPI)
+        <input name="dpi" type="number" min="75" max="600" value="300">
+      </label>
+      <label>Source
+        <select name="source"><option value="flatbed">Flatbed</option><option value="adf">ADF</option></select>
+      </label>
+      <button type="submit">Scan</button>
+    </form>
+  </body>
+</html>

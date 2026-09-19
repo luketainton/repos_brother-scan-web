@@ -1,0 +1,9 @@
+services:
+  brother-scan-web:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SANE_DEVICE: "${SANE_DEVICE:-}"
+      SCAN_TIMEOUT: "${SCAN_TIMEOUT:-120}"
+    restart: unless-stopped

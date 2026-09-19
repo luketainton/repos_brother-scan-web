@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    uses: actions/gha-workflows/.gitea/workflows/ci-python-unified.yml@main
+    with:
+      package-manager: uv
+      python-version: '3.12'
+      docker-enabled: true
+      sonarqube: false
+      security-scan: true
