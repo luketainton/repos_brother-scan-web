@@ -14,6 +14,8 @@ from flask import Flask, Response, jsonify, render_template, request, send_file
 
 app = Flask(__name__)
 
+app.logger.setLevel("INFO")
+
 ALLOWED_FORMATS = {"png", "pdf"}
 ALLOWED_SOURCES = {"flatbed", "adf"}
 DEFAULT_DPI = 300
