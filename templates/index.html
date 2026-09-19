@@ -87,11 +87,43 @@
       const scanForm = document.querySelector('form');
       const scanButton = scanForm.querySelector('button[type="submit"]');
       const buttonLabel = scanButton.querySelector('.button-label');
+      const readyLabel = buttonLabel.innerHTML;
 
-      scanForm.addEventListener('submit', () => {
+      scanForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
         scanButton.disabled = true;
         scanButton.setAttribute('aria-busy', 'true');
         buttonLabel.innerHTML = '<span class="spinner" aria-hidden="true"></span>Scanning...';
+
+        try {
+          const response = await fetch(scanForm.action, {
+            method: scanForm.method,
+            body: new FormData(scanForm),
+          });
+
+          if (!response.ok) {
+            let message = 'The scan failed.';
+            if ((response.headers.get('content-type') || '').includes('application/json')) {
+              const error = await response.json();
+              message = error.error || message;
+            }
+            throw new Error(message);
+          }
+
+          const download = document.createElement('a');
+          download.href = URL.createObjectURL(await response.blob());
+          download.download = 'scan.' + scanForm.elements.format.value;
+          document.body.appendChild(download);
+          download.click();
+          download.remove();
+          URL.revokeObjectURL(download.href);
+        } catch (error) {
+          window.alert(error.message);
+        } finally {
+          scanButton.disabled = false;
+          scanButton.setAttribute('aria-busy', 'false');
+          buttonLabel.innerHTML = readyLabel;
+        }
       });
     </script>
   </main>

@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 import subprocess
 import tempfile
+import time
+import uuid
 from pathlib import Path
 
 import img2pdf
@@ -19,8 +21,21 @@ MAX_DPI = 600
 MIN_DPI = 75
 
 
-def _scan(image_format: str, dpi: int, source: str) -> Path:
+def _log_scan_event(event: str, **fields: object) -> None:
+    values = {"event": event, **fields}
+    rendered_values = []
+    for key, value in values.items():
+        rendered_value = str(value).replace(chr(92), chr(92) + chr(92))
+        rendered_value = rendered_value.replace(chr(34), chr(92) + chr(34))
+        rendered_values.append(f'{key}="{rendered_value}"')
+    app.logger.info(" ".join(rendered_values))
+
+
+def _scan(image_format: str, dpi: int, source: str, job_id: str) -> Path:
     """Run scanimage and return a temporary output file."""
+    started_at = time.monotonic()
+    _log_scan_event("scan_started", job_id=job_id, format=image_format, dpi=dpi, source=source)
+    status = "failed"
     suffix = ".png" if image_format == "png" else ".pdf"
     output = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
     output.close()
@@ -42,11 +57,19 @@ def _scan(image_format: str, dpi: int, source: str) -> Path:
         if image_format == "pdf":
             Path(output.name).write_bytes(img2pdf.convert(str(png_path)))
             png_path.unlink(missing_ok=True)
+        status = "completed"
         return Path(output.name)
     except Exception:
         Path(output.name).unlink(missing_ok=True)
         png_path.unlink(missing_ok=True)
         raise
+    finally:
+        _log_scan_event(
+            "scan_ended",
+            job_id=job_id,
+            status=status,
+            duration_seconds=f"{time.monotonic() - started_at:.3f}",
+        )
 
 
 @app.get("/")
@@ -69,8 +92,17 @@ def scan() -> Response:
     if not MIN_DPI <= dpi <= MAX_DPI:
         return jsonify(error=f"dpi must be between {MIN_DPI} and {MAX_DPI}"), 400
 
+    job_id = uuid.uuid4().hex[:12]
+    _log_scan_event(
+        "scan_submitted",
+        job_id=job_id,
+        format=image_format,
+        dpi=dpi,
+        source=source,
+    )
+
     try:
-        output = _scan(image_format, dpi, source)
+        output = _scan(image_format, dpi, source, job_id)
     except subprocess.TimeoutExpired:
         return jsonify(error="scanner timed out"), 504
     except subprocess.CalledProcessError as error:
