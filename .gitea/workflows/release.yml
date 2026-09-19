@@ -1,0 +1,97 @@
+name: Publish Docker release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    name: Create release and publish image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Ensure Gitea release exists
+        env:
+          GITEA_SERVER_URL: ${{ gitea.server_url }}
+          GITEA_API_URL: ${{ gitea.server_url }}/api/v1
+          GITEA_REPOSITORY: ${{ gitea.repository }}
+          GITEA_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+          RELEASE_TAG: ${{ gitea.ref_name }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -eu
+
+          release_url="${GITEA_API_URL}/repos/${GITEA_REPOSITORY}/releases/tags/${RELEASE_TAG}"
+          response_file="$(mktemp)"
+          response_status="$(curl --silent --show-error --output "${response_file}" \
+            --write-out '%{http_code}' \
+            --header "Authorization: token ${GITEA_TOKEN}" \
+            --header 'Accept: application/json' \
+            "${release_url}")"
+
+          case "${response_status}" in
+            200)
+              echo "Release ${RELEASE_TAG} already exists; reusing it."
+              exit 0
+              ;;
+            404)
+              ;;
+            *)
+              echo "Unable to check release ${RELEASE_TAG} (HTTP ${response_status})." >&2
+              cat "${response_file}" >&2
+              exit 1
+              ;;
+          esac
+
+          previous_tag="$(git describe --tags --abbrev=0 "${RELEASE_SHA}^" 2>/dev/null || true)"
+          commit_url_base="${GITEA_SERVER_URL}/${GITEA_REPOSITORY}/commit"
+          if [ -n "${previous_tag}" ]; then
+            release_notes="$(git log --pretty=format:"- [%h](${commit_url_base}/%H) %s" "${previous_tag}..${RELEASE_TAG}")"
+            changelog_range="${previous_tag}...${RELEASE_TAG}"
+          else
+            release_notes="$(git log --pretty=format:"- [%h](${commit_url_base}/%H) %s" "${RELEASE_TAG}")"
+            changelog_range="${RELEASE_TAG}"
+          fi
+          if [ -z "${release_notes}" ]; then
+            release_notes="- No commits found since the previous release."
+          fi
+          release_notes="${release_notes}"$'\n\n'"Full Changelog: ${changelog_range}"
+
+          release_payload="$(jq -n \
+            --arg tag "${RELEASE_TAG}" \
+            --arg body "${release_notes}" \
+            --arg target "${RELEASE_SHA}" \
+            '{tag_name: $tag, name: $tag, body: $body, target_commitish: $target}')"
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: token ${GITEA_TOKEN}" \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --data "${release_payload}" \
+            "${GITEA_API_URL}/repos/${GITEA_REPOSITORY}/releases"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to Gitea Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ vars.PACKAGES_REGISTRY_URL }}
+          username: ${{ vars.ACTIONS_USERNAME }}
+          password: ${{ secrets.ACTIONS_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ vars.PACKAGES_REGISTRY_URL }}/${{ gitea.repository }}:${{ gitea.ref_name }}
+            ${{ vars.PACKAGES_REGISTRY_URL }}/${{ gitea.repository }}:latest
