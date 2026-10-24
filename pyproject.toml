@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "flask>=3.1,<4",
-    "gunicorn>=23,<24",
+    "gunicorn>=26,<27",
     "img2pdf>=0.6,<1",
 ]
 
