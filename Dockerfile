@@ -18,7 +18,7 @@ RUN apt-get update \
        fi \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /uvx /bin/
 WORKDIR /app
 COPY pyproject.toml uv.lock* README.md ./
 RUN uv sync --frozen --no-dev || uv sync --no-dev
